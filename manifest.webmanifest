@@ -1,0 +1,11 @@
+{
+  "name": "飲食店レシピノート",
+  "short_name": "レシピノート",
+  "description": "飲食店の仕込み業務・レシピ標準化アプリ",
+  "start_url": "./index.html",
+  "scope": "./",
+  "display": "standalone",
+  "background_color": "#ffffff",
+  "theme_color": "#ee8a1f",
+  "lang": "ja"
+}

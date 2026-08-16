@@ -1,0 +1,173 @@
+<!DOCTYPE html>
+<html lang="ja">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0, viewport-fit=cover">
+<meta name="theme-color" content="#ee8a1f">
+<meta name="apple-mobile-web-app-capable" content="yes">
+<meta name="apple-mobile-web-app-status-bar-style" content="default">
+<meta name="apple-mobile-web-app-title" content="飲食店レシピノート">
+<link rel="manifest" href="manifest.webmanifest">
+<title>飲食店レシピノート</title>
+<link rel="stylesheet" href="style.css">
+</head>
+<body>
+<header class="app-header">
+  <button id="backButton" class="icon-button hidden" type="button" aria-label="戻る">‹</button>
+  <h1 id="headerTitle">飲食店レシピノート</h1>
+  <button id="lockButton" class="icon-button" type="button" aria-label="店長モード">🔒</button>
+  <button id="gearButton" class="icon-button hidden manager-only" type="button" aria-label="カテゴリ編集">⚙</button>
+</header>
+
+<main class="app-main">
+
+  <section id="categoryView" class="view">
+    <div class="home-layout">
+      <ul id="categoryList" class="category-sidebar"></ul>
+      <div class="recipe-list-pane">
+        <div id="recipeListEmpty" class="empty-message hidden">まだレシピが<br>ありません。</div>
+        <ul id="recipeList" class="recipe-list"></ul>
+      </div>
+    </div>
+    <button id="addRecipeButton" class="fab hidden manager-only" type="button">＋ レシピを追加</button>
+  </section>
+
+  <section id="prepView" class="view hidden">
+    <p class="field-benefit-note">「明日仕込む」をチェックしたレシピが、ここに表示されます。仕込みが終わったらチェックを外してください。</p>
+    <div id="prepListEmpty" class="empty-message hidden">今、仕込み予定の<br>レシピはありません。</div>
+    <ul id="prepList" class="recipe-list"></ul>
+  </section>
+
+  <section id="recipeDetailView" class="view hidden">
+    <div id="detailPhotoWrap" class="detail-photo-wrap hidden">
+      <img id="detailPhoto" alt="">
+    </div>
+    <div class="detail-body">
+      <h2 id="detailName"></h2>
+      <div class="detail-meta">
+        <span id="detailTime"></span>
+        <span id="detailLastPrepped"></span>
+      </div>
+      <div class="prep-toggle-row">
+        <label class="check-label"><input type="checkbox" id="detailPrepCheckbox" autocomplete="off"> 明日仕込む</label>
+        <select id="detailPrepMultiplier" class="serving-select hidden"></select>
+      </div>
+      <div id="detailServingWrap" class="detail-section hidden">
+        <div class="detail-section-header">
+          <h3>分量</h3>
+          <select id="detailServingSelect" class="serving-select"></select>
+        </div>
+      </div>
+      <div id="detailStagesWrap" class="detail-section hidden">
+        <div id="detailStages"></div>
+      </div>
+      <div class="detail-section">
+        <h3>気づきメモ</h3>
+        <div id="detailNotes" class="notes-board"></div>
+        <div class="note-add-row">
+          <input id="newNoteName" type="text" maxlength="20" placeholder="名前（任意）">
+          <textarea id="newNoteText" rows="2" placeholder="気づいたことを書き足す"></textarea>
+          <button id="addNoteButton" class="secondary-button small-button" type="button">＋ 書き込む</button>
+        </div>
+      </div>
+      <div class="detail-actions manager-only hidden">
+        <button id="editRecipeButton" class="secondary-button" type="button">編集する</button>
+        <button id="deleteRecipeButton" class="danger-outline-button" type="button">削除する</button>
+      </div>
+    </div>
+  </section>
+
+  <section id="categoryEditView" class="view hidden">
+    <p class="field-benefit-note">上下の矢印で並び順を変えられます。よく使うものを上にしておくと便利です。</p>
+    <ul id="categoryEditList" class="category-edit-list"></ul>
+    <div class="category-add-row">
+      <input id="newCategoryName" type="text" maxlength="20" placeholder="新しいカテゴリ名（例：スープレシピ）">
+      <button id="addCategoryButton" class="secondary-button" type="button">＋ 追加</button>
+    </div>
+
+    <div class="data-section">
+      <h3>店長モードのPIN</h3>
+      <p class="field-benefit-note">レシピの追加・編集・削除やカテゴリ編集をするときに必要な暗証番号です。</p>
+      <button id="changePinButton" class="secondary-button" type="button">PINを変更する</button>
+    </div>
+
+    <div class="data-section">
+      <h3>データ管理</h3>
+      <p class="field-benefit-note">カテゴリ・レシピをすべてファイルに保存します。機種変更や万一のデータ消失に備えられます。</p>
+      <div class="form-actions">
+        <button id="exportButton" class="secondary-button" type="button">バックアップ</button>
+        <label class="secondary-button file-label">復元<input id="importInput" type="file" accept="application/json" class="hidden"></label>
+      </div>
+    </div>
+  </section>
+
+</main>
+
+<nav class="tab-bar">
+  <button class="tab-button active" data-view="categoryView" type="button"><span>📖</span>レシピ一覧</button>
+  <button class="tab-button" data-view="prepView" type="button"><span>📋</span>仕込みノート</button>
+</nav>
+
+<div id="recipeFormModal" class="modal hidden" aria-hidden="true">
+  <div class="modal-backdrop" data-close="recipeForm"></div>
+  <div class="modal-card">
+    <div class="modal-heading"><h2 id="recipeFormTitle">レシピを追加</h2><button class="icon-button" data-close="recipeForm" type="button">×</button></div>
+    <form id="recipeForm">
+      <input type="hidden" id="recipeId">
+      <label for="recipeName">料理名</label>
+      <input id="recipeName" type="text" placeholder="例：基本の照り焼きダレ" required>
+
+      <label for="recipeCategory">カテゴリ</label>
+      <select id="recipeCategory"></select>
+
+      <label>写真（任意）</label>
+      <div class="photo-input-row">
+        <img id="recipePhotoPreview" class="photo-preview hidden" alt="">
+        <input id="recipePhotoInput" type="file" accept="image/*">
+        <button id="removePhotoButton" class="secondary-button small-button hidden" type="button">写真を削除</button>
+      </div>
+
+      <label for="recipeServingBase">この分量は</label>
+      <select id="recipeServingBase"></select>
+
+      <label>工程（材料と作り方）</label>
+      <div id="stagesContainer" class="stages-container"></div>
+      <button id="addStageButton" class="secondary-button small-button" type="button">＋ 工程を追加</button>
+
+      <label for="recipeCookTime">調理時間（任意）</label>
+      <input id="recipeCookTime" type="text" placeholder="例：15分">
+
+      <p id="recipeFormError" class="error-message"></p>
+      <div class="form-actions"><button type="button" class="secondary-button" data-close="recipeForm">キャンセル</button><button type="submit" class="primary-button">保存</button></div>
+    </form>
+  </div>
+</div>
+
+<div id="pinModal" class="modal hidden" aria-hidden="true">
+  <div class="modal-backdrop" data-close="pin"></div>
+  <div class="modal-card">
+    <div class="modal-heading"><h2 id="pinModalTitle">PINを入力</h2><button class="icon-button" data-close="pin" type="button">×</button></div>
+    <form id="pinForm">
+      <label for="pinInput" id="pinInputLabel">PIN（数字4桁）</label>
+      <input id="pinInput" type="tel" inputmode="numeric" maxlength="8" placeholder="例：1234">
+      <label for="pinInputConfirm" id="pinConfirmLabel" class="hidden">確認のためもう一度</label>
+      <input id="pinInputConfirm" type="tel" inputmode="numeric" maxlength="8" class="hidden" placeholder="もう一度入力">
+      <p id="pinFormError" class="error-message"></p>
+      <div class="form-actions"><button type="button" class="secondary-button" data-close="pin">キャンセル</button><button type="submit" class="primary-button">決定</button></div>
+    </form>
+  </div>
+</div>
+
+<div id="prepPickModal" class="modal hidden" aria-hidden="true">
+  <div class="modal-backdrop" data-close="prepPick"></div>
+  <div class="modal-card">
+    <div class="modal-heading"><h2>仕込む量を選ぶ</h2><button class="icon-button" data-close="prepPick" type="button">×</button></div>
+    <p id="prepPickName" class="field-benefit-note"></p>
+    <div id="prepPickOptions" class="rating-picker prep-pick-options"></div>
+    <div class="form-actions"><button id="prepPickConfirm" type="button" class="primary-button full-button">この量で「明日仕込む」に追加</button></div>
+  </div>
+</div>
+
+<script src="script.js"></script>
+</body>
+</html>
